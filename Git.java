@@ -1,16 +1,29 @@
 import java.io.*;
 import java.nio.file.*;
-import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.math.BigInteger;
 public class Git{
+    //instance variables
+    private File git = new File("git");
+    private File objects = new File("git/objects");
+    private File index = new File("git/index");
+    private File head = new File("git/HEAD");
+    //getters
+    public File getGit(){
+        return git;
+    }
+    public File getObjects(){
+        return objects;
+    }
+    public File getIndex(){
+        return index;
+    }
+    public File getHead(){
+        return head;
+    }
     public void initRepo(){
         //basic Git files required for initialization
-        File git = new File("git");
-        File objects = new File("git/objects");
-        File index = new File("git/index");
-        File head = new File("git/HEAD");
         //If there is going to be an issue, its going to be here
         if (!git.exists() && !objects.exists() && !index.exists() && !head.exists()){
            //basic-ass file creation
@@ -46,22 +59,28 @@ public class Git{
         //exception handeling
     } catch(NoSuchAlgorithmException e){
             e.printStackTrace();
-        } catch(IOException e){
-            e.printStackTrace();
-        }
+    }
         return "";
     }
     public void makeBlob(byte[] contents, String blobName){
         File output = new File("git/objects/"+blobName);
-        output.createnewFile();
+        try{
+        output.createNewFile();
         Files.write(Paths.get("git/objects/"+blobName), contents);
+        }catch(IOException e){
+            e.printStackTrace();
+        }
         
     }
     public void updateIndex(Path filePath){
-        byte[] contents = Files.readString(filePath).getBytes();
+        try{
+        byte[] contents = Files.readAllBytes(filePath);
         String blobName = hashFile(contents);
         String fileName = filePath.getFileName().toString();
         String output = "\n"+ blobName + " " + fileName;
         Files.write(Paths.get("git/index"), output.getBytes());
+        }catch(IOException e){
+            e.printStackTrace();
+        }
     }
 }
