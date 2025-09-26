@@ -5,7 +5,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.math.BigInteger;
 public class Git{
-    public void InitRepo(){
+    public void initRepo(){
         //basic Git files required for initialization
         File git = new File("git");
         File objects = new File("git/objects");
@@ -29,12 +29,12 @@ public class Git{
         }
 
     }
-    public String HashFile(Path filePath){
+    public String hashFile(byte[] contents){
         try{
         //SHA-1 initialization
         MessageDigest md = MessageDigest.getInstance("SHA-1");
         //byte array created here
-        byte[] intermediaryArray = md.digest(Files.readString(filePath, StandardCharsets.UTF_8).getBytes(StandardCharsets.UTF_8));
+        byte[] intermediaryArray = md.digest(contents);
         BigInteger hashResult = new BigInteger(1, intermediaryArray);
         StringBuilder output = new StringBuilder(hashResult.toString(16));
         //fills out trailing zeros on the output string
@@ -50,5 +50,12 @@ public class Git{
             e.printStackTrace();
         }
         return "";
+    }
+    public void makeBlob(byte[] contents){
+        String fileName = hashFile(contents);
+        File output = new File("/git/objects/"+fileName);
+        output.createnewFile();
+        Files.write(Paths.get("/git/objects/"+fileName), contents);
+        
     }
 }
