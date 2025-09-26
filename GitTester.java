@@ -1,5 +1,5 @@
 import java.io.*;
-import java.nio.*;
+import java.nio.file.*;
 public class GitTester {
     public static void main(String[] args) {
         //initilization cycle
@@ -11,6 +11,18 @@ public class GitTester {
         verifyInit(git);
         //removes the repository
         cleanUp(git);
+        File sampleFile = new File("sampleFile.txt");
+        try{
+        sampleFile.createNewFile();
+        Files.write(sampleFile.toPath(), "THIS IS A TEST MESSAGE".getBytes());
+        }catch(IOException e){
+            e.printStackTrace();
+        }
+        /* NEXT STEPS
+         * MAKE BLOB, COMPARE SHA
+         * ADD TO INDEX
+         * DELETE FILES OUTSIDE OF git FOLDER
+         */
     }
     public static boolean verifyInit(Git git){
         return git.getGit().exists() && git.getObjects().exists() && git.getIndex().exists() && git.getHead().exists();
