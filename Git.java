@@ -66,19 +66,28 @@ public class Git{
         File output = new File("git/objects/"+blobName);
         try{
         output.createNewFile();
-        Files.write(Paths.get("git/objects/"+blobName), contents);
+        Files.write(output.toPath(), contents);
         }catch(IOException e){
             e.printStackTrace();
         }
         
     }
-    public void updateIndex(Path filePath){
+    public void updateIndex(Path filePath, boolean createBlob){
         try{
         byte[] contents = Files.readAllBytes(filePath);
         String blobName = hashFile(contents);
+        if(createBlob){
+            makeBlob(contents, blobName);
+        }
         String fileName = filePath.getFileName().toString();
-        String output = "\n"+ blobName + " " + fileName;
-        Files.write(Paths.get("git/index"), output.getBytes());
+        if(index.length() == 0){
+            String output = blobName + " " + fileName;
+            Files.write(index.toPath(), output.getBytes(), StandardOpenOption.APPEND);
+        }
+        else{
+             String output = "\n"+ blobName + " " + fileName;
+             Files.write(index.toPath(), output.getBytes(), StandardOpenOption.APPEND);
+        }
         }catch(IOException e){
             e.printStackTrace();
         }

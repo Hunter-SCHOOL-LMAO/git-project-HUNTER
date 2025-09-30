@@ -21,7 +21,7 @@ public class GitTester {
         sampleFile3.createNewFile();
         Files.write(sampleFile.toPath(), "THIS IS A TEST MESSAGE".getBytes());
         Files.write(sampleFile2.toPath(), "THIS IS ALSO A TEST MESSAGE".getBytes());
-        Files.write(sampleFile3.toPath(), "THIS IS ALSO A TEST MESSAGE".getBytes());
+        Files.write(sampleFile3.toPath(), "THIS IS TRULY ANOTHER TEST MESSAGE".getBytes());
         git.makeBlob(Files.readAllBytes(sampleFile.toPath()), git.hashFile(Files.readAllBytes(sampleFile.toPath())));
         //Blob name testing
         System.out.println("Created blob name:\n"+git.getObjects().list()[0]);
@@ -31,12 +31,12 @@ public class GitTester {
         }
         //object folder clearing
         clearObjects(git);
-        git.updateIndex(sampleFile.toPath());
-        git.updateIndex(sampleFile2.toPath());
-        git.updateIndex(sampleFile3.toPath());
+        git.updateIndex(sampleFile.toPath(), true);
+        git.updateIndex(sampleFile2.toPath(), true);
+        git.updateIndex(sampleFile3.toPath(), true);
         try{
         System.out.println("Index file contents:\n"+Files.readString(git.getIndex().toPath()));
-        System.out.println("Objects folder contents:\n");
+        System.out.println("Objects folder contents:");
         for(String e : git.getObjects().list()){
             System.out.println(e);
         }
@@ -64,17 +64,17 @@ public class GitTester {
         }catch(IOException e){
             e.printStackTrace();
         }
-        File project = new File(git.getGit().getParent());
+        File project = new File("/home/hunter/HTCS_Projects/git-project-HUNTER");
         cleanUp(git);
         FilenameFilter filter = new FilenameFilter() {
                 public boolean accept(File f, String name)
                 {
-                    return name.endsWith(".java") || name.endsWith(".git") || name.endsWith(".md") || name.endsWith(".gitignore");
+                    return !name.endsWith(".java") && !name.endsWith(".git") && !name.endsWith(".md") && !name.endsWith(".gitignore");
                 }
             };
         for(File e : project.listFiles(filter)){
             e.delete();
         }
-        return true;
+         return true;
     }
 }
