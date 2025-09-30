@@ -13,7 +13,7 @@ public class GitTester {
         cleanUp(git);
         File sampleFile = new File("sampleFile.txt");
         File sampleFile2 = new File("sampleFile2.txt");
-        File sampleFile3 = new File("sampleFile2.txt");
+        File sampleFile3 = new File("sampleFile3.txt");
         //file and blob creation
         try{
         sampleFile.createNewFile();
@@ -24,7 +24,7 @@ public class GitTester {
         Files.write(sampleFile3.toPath(), "THIS IS ALSO A TEST MESSAGE".getBytes());
         git.makeBlob(Files.readAllBytes(sampleFile.toPath()), git.hashFile(Files.readAllBytes(sampleFile.toPath())));
         //Blob name testing
-        System.out.println("Created blob name:\n"+git.getObjects().list().toString());
+        System.out.println("Created blob name:\n"+git.getObjects().list()[0]);
         System.out.println("Correct blob name: \n"+git.hashFile(Files.readAllBytes(sampleFile.toPath())));
         }catch(IOException e){
             e.printStackTrace();
@@ -36,13 +36,14 @@ public class GitTester {
         git.updateIndex(sampleFile3.toPath());
         try{
         System.out.println("Index file contents:\n"+Files.readString(git.getIndex().toPath()));
-        System.out.println("Objects folder contents:\n"+git.getObjects().list().toString());
+        System.out.println("Objects folder contents:\n");
+        for(String e : git.getObjects().list()){
+            System.out.println(e);
+        }
         }catch(IOException e){
             e.printStackTrace();
         }
-        /* NEXT STEPS
-         * DELETE FILES OUTSIDE OF git FOLDER
-         */
+        garbageCollector(git);
     }
     public static boolean verifyInit(Git git){
         return git.getGit().exists() && git.getObjects().exists() && git.getIndex().exists() && git.getHead().exists();
@@ -52,6 +53,26 @@ public class GitTester {
     }
     public static boolean clearObjects(Git git){
         for(File e : git.getObjects().listFiles()){
+            e.delete();
+        }
+        return true;
+    }
+    public static boolean garbageCollector(Git git){
+        clearObjects(git);
+        try{
+            Files.writeString(git.getIndex().toPath(), "", StandardOpenOption.TRUNCATE_EXISTING);
+        }catch(IOException e){
+            e.printStackTrace();
+        }
+        File project = new File(git.getGit().getParent());
+        cleanUp(git);
+        FilenameFilter filter = new FilenameFilter() {
+                public boolean accept(File f, String name)
+                {
+                    return name.endsWith(".java") || name.endsWith(".git") || name.endsWith(".md") || name.endsWith(".gitignore");
+                }
+            };
+        for(File e : project.listFiles(filter)){
             e.delete();
         }
         return true;

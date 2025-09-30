@@ -12,7 +12,9 @@ Makes a blob
 Compares the blob name to a Sha-1 hash of the file
 Removes all files and directories in the Objects folder
 Updates the index and creates more blobs x3
-outputs index contents, and then objects folder contents
+Outputs index contents, and then objects folder contents
+Clears everything but the original files
+
 slugcat gaming
 ⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
 ⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡟⠉⠀⢻⣿⣿⣿⣿⣿⣿⡿⠁⠀⠙⢿⣿⣿
