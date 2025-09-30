@@ -88,6 +88,7 @@ public class Git{
             //checks and appends the blob name if the file path is different
             if(indexFilePath.equals(filePath.toString())){
                 if(!hashFile(Files.readAllBytes(filePath)).equals(indexBlobName)){
+                    //lineOffset in necessary, or else it will just contine editing the first line
                     appender.append(newHash, 6+lineOffset, 46+lineOffset);
                     lineReader.close();
                     appender.close();
@@ -96,11 +97,10 @@ public class Git{
             }
             lineOffset += line.length();
         }
-        byte[] contents = Files.readAllBytes(filePath);
-        String blobName = hashFile(contents);
         //combines two methods into one, may delete later
         if(createBlob){
-            makeBlob(contents, blobName);
+            byte[] contents = Files.readAllBytes(filePath);
+            makeBlob(contents, newHash);
         }
         if(index.length() == 0){
             String output = "blob "+newHash + " " + filePath.toString();
