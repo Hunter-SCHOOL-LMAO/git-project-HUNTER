@@ -12,14 +12,20 @@ public class GitTester {
         //removes the repository
         cleanUp(git);
         File sampleFile = new File("sampleFile.txt");
+        //file and blob creation
         try{
         sampleFile.createNewFile();
         Files.write(sampleFile.toPath(), "THIS IS A TEST MESSAGE".getBytes());
+        git.makeBlob(Files.readAllBytes(sampleFile.toPath()), git.hashFile(Files.readAllBytes(sampleFile.toPath())));
+        //Blob name testing
+        System.out.println("Created blob name:\n"+git.getObjects().list().toString());
+        System.out.println("Correct blob name: \n"+git.hashFile(Files.readAllBytes(sampleFile.toPath())));
         }catch(IOException e){
             e.printStackTrace();
         }
+        //object clearing
+        clearObjects(git);
         /* NEXT STEPS
-         * MAKE BLOB, COMPARE SHA
          * ADD TO INDEX
          * DELETE FILES OUTSIDE OF git FOLDER
          */
@@ -29,5 +35,11 @@ public class GitTester {
     }
     public static boolean cleanUp(Git git){
         return git.getGit().delete();
+    }
+    public static boolean clearObjects(Git git){
+        for(File e : git.getObjects().listFiles()){
+            e.delete();
+        }
+        return true;
     }
 }

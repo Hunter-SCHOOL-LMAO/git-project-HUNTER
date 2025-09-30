@@ -8,6 +8,9 @@ Tester functions:
 Creates a repository
 Verifies instalation
 Removes the created repo
+Makes a blob
+Compares the blob name to a Sha-1 hash of the file
+Removes all files and directories in the Objects folder
 
 slugcat gaming
 ⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
