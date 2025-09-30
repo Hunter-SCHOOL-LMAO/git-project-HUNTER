@@ -12,10 +12,16 @@ public class GitTester {
         //removes the repository
         cleanUp(git);
         File sampleFile = new File("sampleFile.txt");
+        File sampleFile2 = new File("sampleFile2.txt");
+        File sampleFile3 = new File("sampleFile2.txt");
         //file and blob creation
         try{
         sampleFile.createNewFile();
+        sampleFile2.createNewFile();
+        sampleFile3.createNewFile();
         Files.write(sampleFile.toPath(), "THIS IS A TEST MESSAGE".getBytes());
+        Files.write(sampleFile2.toPath(), "THIS IS ALSO A TEST MESSAGE".getBytes());
+        Files.write(sampleFile3.toPath(), "THIS IS ALSO A TEST MESSAGE".getBytes());
         git.makeBlob(Files.readAllBytes(sampleFile.toPath()), git.hashFile(Files.readAllBytes(sampleFile.toPath())));
         //Blob name testing
         System.out.println("Created blob name:\n"+git.getObjects().list().toString());
@@ -23,10 +29,18 @@ public class GitTester {
         }catch(IOException e){
             e.printStackTrace();
         }
-        //object clearing
+        //object folder clearing
         clearObjects(git);
+        git.updateIndex(sampleFile.toPath());
+        git.updateIndex(sampleFile2.toPath());
+        git.updateIndex(sampleFile3.toPath());
+        try{
+        System.out.println("Index file contents:\n"+Files.readString(git.getIndex().toPath()));
+        System.out.println("Objects folder contents:\n"+git.getObjects().list().toString());
+        }catch(IOException e){
+            e.printStackTrace();
+        }
         /* NEXT STEPS
-         * ADD TO INDEX
          * DELETE FILES OUTSIDE OF git FOLDER
          */
     }
