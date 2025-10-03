@@ -22,6 +22,7 @@ public class Git{
     public File getHead(){
         return head;
     }
+    //lmao no setters
     public void initRepo(){
         //basic Git files required for initialization
         //If there is going to be an issue, its going to be here
@@ -80,16 +81,17 @@ public class Git{
         String line = "";
         String newHash = hashFile(Files.readAllBytes(filePath));
         int lineOffset = 0;
+        //big check to see if the filePath already exists in the index
         while(line != null){
             line = lineReader.readLine();
             //isolates the filePath and blob name from the read line
-            String indexFilePath = line.substring(46);
-            String indexBlobName = line.substring(6, 46);
-            //checks and appends the blob name if the file path is different
+            String indexFilePath = line.substring(newHash.length());
+            String indexBlobName = line.substring(0, 41);
+            //checks and appends the blob name if the file name is the same, but the hash is different
             if(indexFilePath.equals(filePath.toString())){
                 if(!hashFile(Files.readAllBytes(filePath)).equals(indexBlobName)){
                     //lineOffset in necessary, or else it will just contine editing the first line
-                    appender.append(newHash, 6+lineOffset, 46+lineOffset);
+                    appender.append(newHash, lineOffset, lineOffset+newHash.length() + 1);
                     lineReader.close();
                     appender.close();
                     return true;
@@ -97,17 +99,18 @@ public class Git{
             }
             lineOffset += line.length();
         }
-        //combines two methods into one, may delete later
+        //For blob-making conveinence, may delete later
         if(createBlob){
             byte[] contents = Files.readAllBytes(filePath);
             makeBlob(contents, newHash);
         }
+        //gets rid of the newline at the beginning of the file
         if(index.length() == 0){
-            String output = "blob "+newHash + " " + filePath.toString();
+            String output = newHash + " " + filePath.toString();
             Files.write(index.toPath(), output.getBytes(), StandardOpenOption.APPEND);
         }
         else{
-             String output = "\nblob "+ newHash + " " + filePath.toString();
+             String output = "\n"+newHash + " " + filePath.toString();
              Files.write(index.toPath(), output.getBytes(), StandardOpenOption.APPEND);
         }
         lineReader.close();
@@ -116,5 +119,48 @@ public class Git{
             e.printStackTrace();
         }
         return true;
+    }
+    public String fileTree(String startPath){
+        return Paths.get(fileTreeRecursive(startPath)).getFileName().toString();
+    }
+    //recursive function for fileTree
+    public String fileTreeRecursive(String startPath){
+        File startingFolder = new File(startPath);
+        File[] fileList = startingFolder.listFiles();
+        StringBuilder output = new StringBuilder();
+        try{
+            for(File e : fileList){
+                Path ePath = e.toPath();
+                //base case
+                if(!e.isDirectory()){
+                    //gets rid of starting newline
+                    if(output.length() != 0){
+                        output.append("blob "+ hashFile(Files.readAllBytes(ePath)) + " " + e.getName());
+                    }else{
+                        output.append("\nblob "+ hashFile(Files.readAllBytes(ePath)) + " " + e.getName());
+                    }
+                }
+                //recursive case
+                else{
+                    //recursive call
+                    File recursedTree = new File(objects + Paths.get(fileTreeRecursive(startPath)).getFileName().toString());
+                    //gets rid of starting newline
+                    if(output.length() != 0){
+                        output.append("tree" + recursedTree.getName() + e.getName());
+                    }
+                    else{
+                    output.append("\ntree" + recursedTree.getName() + e.getName());
+                    }
+                }
+            }
+            //turns the StringBuilder into an actual File
+            File outputTree = new File(hashFile(output.toString().getBytes()));
+            outputTree.createNewFile();
+            Files.write(outputTree.toPath(), output.toString().getBytes());
+            return outputTree.getName();
+        }catch(IOException e){
+            e.printStackTrace();
+        }
+        return null;
     }
 }
