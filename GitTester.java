@@ -10,7 +10,8 @@ public class GitTester {
         //making sure it inits correctly
         verifyInit(git);
         //removes the repository
-        cleanUp(git);
+        deleteFolder(git.getGit());
+        git.initRepo();
         File sampleFile = new File("sampleFile.txt");
         File sampleFile2 = new File("sampleFile2.txt");
         File sampleFile3 = new File("sampleFile3.txt");
@@ -48,9 +49,6 @@ public class GitTester {
     public static boolean verifyInit(Git git){
         return git.getGit().exists() && git.getObjects().exists() && git.getIndex().exists() && git.getHead().exists();
     }
-    public static boolean cleanUp(Git git){
-        return git.getGit().delete();
-    }
     public static boolean clearObjects(Git git){
         for(File e : git.getObjects().listFiles()){
             e.delete();
@@ -58,14 +56,8 @@ public class GitTester {
         return true;
     }
     public static boolean garbageCollector(Git git){
-        clearObjects(git);
-        try{
-            Files.writeString(git.getIndex().toPath(), "", StandardOpenOption.TRUNCATE_EXISTING);
-        }catch(IOException e){
-            e.printStackTrace();
-        }
+        deleteFolder(git.getGit());
         File project = new File("/home/hunter/HTCS_Projects/git-project-HUNTER");
-        cleanUp(git);
         FilenameFilter filter = new FilenameFilter() {
                 public boolean accept(File f, String name)
                 {
@@ -76,5 +68,18 @@ public class GitTester {
             e.delete();
         }
          return true;
+    }
+    public static void deleteFolder(File folder) {
+        File[] files = folder.listFiles();
+        if (files != null) { // Some JVMs return null for empty dirs
+            for (File f : files) {
+                if (f.isDirectory()) {
+                    deleteFolder(f); // Recursively delete subdirectories
+                } else {
+                    f.delete(); // Delete files
+                }
+            }
+        }
+        folder.delete(); // Delete the now empty directory
     }
 }

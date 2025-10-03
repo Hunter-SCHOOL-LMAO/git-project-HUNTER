@@ -63,6 +63,7 @@ public class Git{
         return "";
     }
     public void makeBlob(byte[] contents, String blobName){
+        //creates a file and writes the byte[] into it
         File output = new File("git/objects/"+blobName);
         try{
         output.createNewFile();
@@ -72,24 +73,48 @@ public class Git{
         }
         
     }
-    public void updateIndex(Path filePath, boolean createBlob){
+    public boolean updateIndex(Path filePath, boolean createBlob){
         try{
-        byte[] contents = Files.readAllBytes(filePath);
-        String blobName = hashFile(contents);
-        if(createBlob){
-            makeBlob(contents, blobName);
+        BufferedReader lineReader = Files.newBufferedReader(index.toPath());
+        BufferedWriter appender = Files.newBufferedWriter(filePath);
+        String line = "";
+        String newHash = hashFile(Files.readAllBytes(filePath));
+        int lineOffset = 0;
+        while(line != null){
+            line = lineReader.readLine();
+            //isolates the filePath and blob name from the read line
+            String indexFilePath = line.substring(46);
+            String indexBlobName = line.substring(6, 46);
+            //checks and appends the blob name if the file path is different
+            if(indexFilePath.equals(filePath.toString())){
+                if(!hashFile(Files.readAllBytes(filePath)).equals(indexBlobName)){
+                    //lineOffset in necessary, or else it will just contine editing the first line
+                    appender.append(newHash, 6+lineOffset, 46+lineOffset);
+                    lineReader.close();
+                    appender.close();
+                    return true;
+                }
+            }
+            lineOffset += line.length();
         }
-        String fileName = filePath.getFileName().toString();
+        //combines two methods into one, may delete later
+        if(createBlob){
+            byte[] contents = Files.readAllBytes(filePath);
+            makeBlob(contents, newHash);
+        }
         if(index.length() == 0){
-            String output = blobName + " " + fileName;
+            String output = "blob "+newHash + " " + filePath.toString();
             Files.write(index.toPath(), output.getBytes(), StandardOpenOption.APPEND);
         }
         else{
-             String output = "\n"+ blobName + " " + fileName;
+             String output = "\nblob "+ newHash + " " + filePath.toString();
              Files.write(index.toPath(), output.getBytes(), StandardOpenOption.APPEND);
         }
+        lineReader.close();
+        appender.close();
         }catch(IOException e){
             e.printStackTrace();
         }
+        return true;
     }
 }
