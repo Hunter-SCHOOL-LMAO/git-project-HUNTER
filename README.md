@@ -12,6 +12,10 @@ fileTree: Starting point for fileTreeRecursive
 ---------------------------------------------------------------------------------------------------------------------
 fileTreeRecursive: Given a starting path (As a String for some godawful reason) use StringBuilder to read the files in the directory, and add the fileName and it to a tree file in the Objects folder. If it encounters another directory, recurse and make a new tree file for the new directory
 ---------------------------------------------------------------------------------------------------------------------
+initWorkingList: Reads the index and creates a ArrayList of the contents, sorts that, then turns it into a linkedList and calls recursiveColapse in order to generate a Tree
+---------------------------------------------------------------------------------------------------------------------
+recursiveCollapse: An ABSOLUTE PAIN IN MY ASS that IF IT *FUCKING WORKS* will generate tree files and eventually a root tree file for all files in the index
+---------------------------------------------------------------------------------------------------------------------
 Tester functions:
 Creates a repository
 Verifies instalation
@@ -22,6 +26,8 @@ Removes all files and directories in the Objects folder
 Updates the index and creates more blobs x3
 Outputs index contents, and then objects folder contents
 Clears everything but the original files
+---------------------------------------------------------------------------------------------------------------------
+WorkingListObject: an empty carrier class intended for data normalization. It carries the object type, hash value, and path entirely for your convience
 ---------------------------------------------------------------------------------------------------------------------
 slugcat gaming
 ⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
