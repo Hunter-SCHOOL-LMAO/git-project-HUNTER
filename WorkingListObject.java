@@ -1,4 +1,3 @@
-import java.io.*;
 import java.nio.file.*;
 public class WorkingListObject implements Comparable<WorkingListObject>{
     private String type;
