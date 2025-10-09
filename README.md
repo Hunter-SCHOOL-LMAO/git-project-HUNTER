@@ -49,3 +49,24 @@ slugcat gaming
 ⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠀⠀⠈⢃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣼⣿⣿
 ⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⣿
 ⣿⣿⣿⣿⣿⣿⣿⣿⡿⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⣿⠀⠀
+
+
+AJ's Edits:
+
+updateIndex:
+In updateIndex, moved line = lineReader.readLine() to end of while loop
+
+updateIndex now writes to index file and doesn't clear the existing content
+
+Fixed bug in initIndexTree where final root directory and subtrees were being created in file named git/objectshash, not git/objects/hash, may need to make similar fixes elsewhere but we'll see
+
+
+initIndexTree/initIndexTreeHelper:
+Small change so files listed in the index file are created in objects folder if they weren't there before or were updated
+
+
+
+GitTester updates:
+Made initIndexTree run to see if it works
+
+Just added a few more files and directories to test if the tree hashing functionality works and all seems good
