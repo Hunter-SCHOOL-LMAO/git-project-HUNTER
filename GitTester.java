@@ -62,7 +62,12 @@ public class GitTester {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        git.initIndexTree();
+        try {
+            git.commit("Andrew Jo", "Does this work?");
+            git.commit("Ellie", "Yea it does");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         // garbageCollector(git);
     }
 
