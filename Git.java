@@ -4,6 +4,8 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.math.BigInteger;
 import java.util.*;
+import java.time.LocalTime;
+import java.time.LocalDate;
 
 public class Git {
     // instance variables
@@ -11,6 +13,23 @@ public class Git {
     private File objects = new File("git/objects");
     private File index = new File("git/index");
     private File head = new File("git/HEAD");
+
+    private static Map<String, String> monthNumToName = new HashMap<String, String>();
+
+    static {
+        monthNumToName.put("01", "Jan");
+        monthNumToName.put("02", "Feb");
+        monthNumToName.put("03", "Mar");
+        monthNumToName.put("04", "Apr");
+        monthNumToName.put("05", "May");
+        monthNumToName.put("06", "Jun");
+        monthNumToName.put("07", "Jul");
+        monthNumToName.put("08", "Aug");
+        monthNumToName.put("09", "Sep");
+        monthNumToName.put("10", "Oct");
+        monthNumToName.put("11", "Nov");
+        monthNumToName.put("12", "Dec");
+    }
 
     // private LinkedList<WorkingListObject> workingList;
     // getters
@@ -252,7 +271,7 @@ public class Git {
     // }
     // I was honestly really stuck until I came across Shimone's code. After looking
     // at what he did, I really don't know any better way to do it
-    public void initIndexTree() {
+    public String initIndexTree() {
         try {
             StringBuilder rootTreeContents = new StringBuilder();
             String indexFile = Files.readString(index.toPath());
@@ -285,11 +304,14 @@ public class Git {
             }
             // output statements
             String contents = rootTreeContents.toString();
-            File output = new File(objects + "/" + hashFile(contents.getBytes()));
+            String contentHash = hashFile(contents.getBytes());
+            File output = new File(objects + "/" + contentHash);
             Files.write(output.toPath(), contents.getBytes());
+            return contentHash;
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return "";
     }
 
     // returns tree hash
@@ -336,5 +358,66 @@ public class Git {
             e.printStackTrace();
         }
         return treeHash;
+    }
+
+    public void commit(String author, String message) throws IOException {
+        String currentHash = initIndexTree();
+        if (currentHash.length() == 0) {
+            throw new IOException("Failed to initialize tree from index");
+        }
+        File headFile = new File("git/HEAD");
+        if (!headFile.exists()) {
+            throw new IOException("HEAD file does not exist");
+        }
+        String lastCommit = null;
+        try (BufferedReader br = new BufferedReader(new FileReader(headFile))) {
+            lastCommit = br.readLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        String time = LocalTime.now().toString();
+        // Cuts milliseconds
+        time = time.substring(0, 8);
+        String date = LocalDate.now().toString();
+        // String[] timeComps = time.split(":");
+        // String hour = timeComps[0];
+        // String minute = timeComps[1];
+        // String second = timeComps[2].substring(0,2);
+        String[] dateComps = date.split("-");
+        String year = dateComps[0];
+        String month = dateComps[1];
+        String day = dateComps[2];
+        String timeZone = TimeZone.getDefault().getDisplayName(false, 0);
+        System.out.println(timeZone);
+        String timeStamp = String.format("%s %s %s %s, %s", time, timeZone, monthNumToName.get(month), day, year);
+        System.out.println("Last hash: " + lastCommit);
+        System.out.println("Current hash: " + currentHash);
+        System.out.println(timeStamp);
+        StringBuilder commitBuilder = new StringBuilder();
+        commitBuilder.append("tree: " + currentHash + "\n");
+        if (lastCommit == null) {
+            commitBuilder.append("parent:\n");  
+        } else {
+            commitBuilder.append("parent: " + lastCommit + "\n");
+        }
+        commitBuilder.append("author: " + author + "\n");
+        commitBuilder.append("date: " + timeStamp + "\n");
+        commitBuilder.append("message: " + message);
+        String commitContent = commitBuilder.toString();
+        String commitHash = hashFile(commitContent.getBytes());
+        File commitFile = new File("git/objects/" + commitHash);
+        if (!commitFile.exists()) {
+            commitFile.createNewFile();
+        }
+        try (BufferedWriter bw = new BufferedWriter(new PrintWriter(commitFile))) {
+            bw.write(commitContent);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        try (BufferedWriter bw = new BufferedWriter(new PrintWriter(new File("git/HEAD")))) {
+            bw.write(commitHash);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

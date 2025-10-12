@@ -70,3 +70,7 @@ GitTester updates:
 Made initIndexTree run to see if it works
 
 Just added a few more files and directories to test if the tree hashing functionality works and all seems good
+
+
+commit:
+Made new commit() function which takes in an author string and message string. It uses initIndexTree to get the hash of the current root tree based on index file, checks HEAD file to get previous commit hash, if there is one, and determines the current timestamp using LocalTime and LocalDate classes. Updates HEAD file to reflect latest commit hash.
