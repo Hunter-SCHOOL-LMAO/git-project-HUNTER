@@ -10,7 +10,8 @@ public class Git{
     private File objects = new File("git/objects");
     private File index = new File("git/index");
     private File head = new File("git/HEAD");
-    // private LinkedList<WorkingListObject> workingList;
+    private LinkedList<WorkingListObject> workingList;
+    private LinkedList<WorkingListObject> treeList = new LinkedList<>();
     //getters
     public File getGit(){
         return git;
@@ -166,67 +167,104 @@ public class Git{
         return null;
     }
     //shitty attempt
-    // public void initWorkingList(){
-    //     ArrayList<WorkingListObject> workingArray = new ArrayList<WorkingListObject>();
-    //     try{
-    //         BufferedReader lineReader = Files.newBufferedReader(index.toPath());
-    //         while(lineReader.ready()){
-    //             //adds WorkingListObjects (an empty containter class) to the list from the index file
-    //             String line = lineReader.readLine();
-    //             workingArray.add(new WorkingListObject("blob", line.substring(0, 41), Paths.get(line.substring(41))));
-    //         }
-    //         lineReader.close();
-    //     }catch(IOException e){
-    //         e.printStackTrace();
-    //     }
-    //     //god, I hope this works 
-    //     Collections.sort(workingArray);
-    //     workingList = new LinkedList<>(workingArray);
-    //     recursiveColapse(workingList.getFirst());
-    // }
-    // ///GRAAAH I HATE IT I HATE IT I HATE IT
-    // public void recursiveColapse(WorkingListObject previous){
-    //     //breakaway boolean
-    //     boolean stillEqual = true;
-    //     workingList.removeFirst();
-    //     //Stringbuilder init
-    //     StringBuilder outputTree = new StringBuilder(previous.getType() + " " + previous.getHash() + " " + previous.getPath().getFileName());
-    //     try{
-    //         //for every object left in the array (if there are none, proceed to the base case)
-    //         for(int i = 0; i < workingList.size() && stillEqual; i ++){
-    //             //grab the next item
-    //             WorkingListObject next = workingList.getFirst();
-    //             //if the parent is equal to the start of the chain
-    //             if(next.getPath().getParent().equals(previous.getPath().getParent())){
-    //                 //add it to the next line on the sub-tree and remove it
-    //                 outputTree.append("\n" + next.getType() + " " + next.getHash() + " " + next.getPath().getFileName());
-    //                 workingList.removeFirst();
-    //             }
-    //             /*ELSE EXPLANATION
-    //              * IF THE NEXT FILE DOES NOT SHARE THE SAME PARENT DIRECTORY
-    //              * DO NOT TRIGGER BASE CASE
-    //              * SAVE THE CURRENT TREE
-    //              * START THE PROCESS OVER AGAIN WITH THE CURRENT TREE AS THE START OF NEXT RECURSE
-    //              * IF THE SORTING ACTUALLY *WORKS*, THE NEXT RECURSION SHOULD BE THE STUFF IMMEDIATELY OUTSIDE THE CURRENT DIRECTORY
-    //              */
-    //             else{
-    //                 stillEqual = false;
-    //                 File leafTree = new File(objects + hashFile(outputTree.toString().getBytes()));
-    //                 Files.write(leafTree.toPath(), outputTree.toString().getBytes());
-    //                 workingList.addFirst(new WorkingListObject("tree", hashFile(outputTree.toString().getBytes()), previous.getPath().getParent()));
-    //                 recursiveColapse(next);
-    //             }
-    //         }//base case
-    //         if(stillEqual = true){
-    //             //save the file (and update the directory i guess)
-    //             File rootTree = new File(objects + hashFile(outputTree.toString().getBytes()));
-    //             Files.write(rootTree.toPath(), outputTree.toString().getBytes());
-    //             workingList.addFirst(new WorkingListObject("tree", hashFile(outputTree.toString().getBytes()), previous.getPath().getParent()));
-    //         }
-    //     }catch(IOException e){
-    //         e.printStackTrace();
-    //     }
-    // }
+    public String makeIndexTree(){
+        ArrayList<WorkingListObject> workingArray = new ArrayList<WorkingListObject>();
+        try{
+            BufferedReader lineReader = Files.newBufferedReader(index.toPath());
+            while(lineReader.ready()){
+                //adds WorkingListObjects (an empty containter class) to the list from the index file
+                String line = lineReader.readLine();
+                workingArray.add(new WorkingListObject("blob", line.substring(0, 41), Paths.get(line.substring(41))));
+            }
+            lineReader.close();
+        }catch(IOException e){
+            e.printStackTrace();
+        }
+        //god, I hope this works 
+        Collections.sort(workingArray, new PathDepthAndNameComparator());
+        workingList = new LinkedList<>(workingArray);
+        return recursiveColapse(workingList.getFirst());
+    }
+     static class PathDepthAndNameComparator implements Comparator<WorkingListObject> {
+        @Override
+        public int compare(WorkingListObject p1, WorkingListObject p2) {
+            // 1. Compare by depth
+            int depth1 = p1.getPath().getNameCount();
+            int depth2 = p2.getPath().getNameCount();
+
+            if (depth1 != depth2) {
+                return Integer.compare(depth1, depth2); // Sort by depth ascending
+            }
+
+            // 2. If depths are equal, compare by name
+            String name1 = p1.getPath().getFileName().toString();
+            String name2 = p2.getPath().getFileName().toString();
+            return name1.compareTo(name2); // Sort by name ascending
+        }
+    }
+    // LETS FUCKING GOOOOOOOOOOOOO
+    public String recursiveColapse(WorkingListObject previous){
+        //breakaway boolean
+        boolean stillEqual = true;
+        workingList.removeFirst();
+        //Stringbuilder init
+        StringBuilder outputTree = new StringBuilder(previous.getType() + " " + previous.getHash() + " " + previous.getPath());
+        try{
+            //for every object left in the array (if there are none, proceed to the base case)
+            for(int i = 0; i < workingList.size() && stillEqual; i ++){
+                //grab the next item
+                WorkingListObject next = workingList.getFirst();
+                //if the parent is equal to the start of the chain
+                if(next.getPath().getParent().equals(previous.getPath().getParent())){
+                    //add it to the next line on the sub-tree and remove it
+                    outputTree.append("\n" + next.getType() + " " + next.getHash() + " " + next.getPath());
+                    workingList.removeFirst();
+                }
+                /*ELSE EXPLANATION
+                 * IF THE NEXT FILE DOES NOT SHARE THE SAME PARENT DIRECTORY
+                 * DO NOT TRIGGER BASE CASE
+                 * SAVE THE CURRENT TREE
+                 * START THE PROCESS OVER AGAIN WITH THE CURRENT TREE AS THE START OF NEXT RECURSE
+                 * IF THE SORTING ACTUALLY *WORKS*, THE NEXT RECURSION SHOULD BE THE STUFF IMMEDIATELY OUTSIDE THE CURRENT DIRECTORY
+                 */
+                else{
+                    stillEqual = false;
+                    //check the list of trees to see if something from there fits here
+                    for(int e = 0; e < treeList.size(); e ++){
+                        WorkingListObject current = treeList.get(e);
+                        if(current.getPath().equals(previous.getPath().getParent())){
+                            outputTree.append("\n"+ current.getType()+" " + current.getHash() + " " + current.getPath());
+                            treeList.remove(e);
+                            e--;
+                        }
+                    }
+                    //save a new tree to the list of trees
+                    File leafTree = new File(objects + hashFile(outputTree.toString().getBytes()));
+                    Files.write(leafTree.toPath(), outputTree.toString().getBytes());
+                    treeList.add(new WorkingListObject("tree", hashFile(outputTree.toString().getBytes()), previous.getPath().getParent()));
+                    recursiveColapse(next);
+                }
+            }//base case
+            if(stillEqual = true){
+                //checks the tree list for any last stragglers
+                for(int e = 0; e < treeList.size(); e ++){
+                        WorkingListObject currentTree = treeList.get(e);
+                        if(currentTree.getPath().getParent().equals(previous.getPath().getParent())){
+                            outputTree.append("\n"+ currentTree.getType()+" " + currentTree.getHash() + " " + currentTree.getPath());
+                            treeList.remove(e);
+                            e--;
+                        }
+                    }
+                //writes the root file
+                File rootTree = new File(objects + hashFile(outputTree.toString().getBytes()));
+                Files.write(rootTree.toPath(), outputTree.toString().getBytes());
+                return rootTree.toPath().getFileName().toString();
+            }
+        }catch(IOException e){
+            e.printStackTrace();
+        }
+        return null;
+    }
     //I was honestly really stuck until I came across Shimone's code. After looking at what he did, I really don't know any better way to do it
     public void initIndexTree(){
         try{
