@@ -74,3 +74,14 @@ Just added a few more files and directories to test if the tree hashing function
 
 commit:
 Made new commit() function which takes in an author string and message string. It uses initIndexTree to get the hash of the current root tree based on index file, checks HEAD file to get previous commit hash, if there is one, and determines the current timestamp using LocalTime and LocalDate classes. Updates HEAD file to reflect latest commit hash.
+
+
+GitWrapper Class:
+Organizes all the functions of the Git class into the quintessential steps of git: initialize project, stage changes, commit changes, and checkout changes. checkout is the only real novel code that starts with HEAD commit hash, then goes back through commit files until you find the commit you're looking for. Will then programatically create/change files and directories to match previous commits data based on info stored in git/objects. Testing function updated accordingly to show functionality.
+
+Last last bug fixes:
+Updated commit to return String of its commit hash
+
+Made sure initIndexTree actually creates a root tree file
+
+updateIndex originally tried to use an append function of BufferedWriter to replace a line with new line by giving the indices around the original line, but it turns out append just adds the new string to the end of the line. I couldn't find a way to reconfigure append to make the desired updating of a line, so I just used my method from my code.
