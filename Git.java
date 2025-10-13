@@ -1,4 +1,5 @@
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -109,24 +110,32 @@ public class Git {
             BufferedWriter appender = Files.newBufferedWriter(index.toPath(), StandardOpenOption.APPEND);
             String line = lineReader.readLine();
             String newHash = hashFile(Files.readAllBytes(filePath));
-            int lineOffset = 0;
+            int fileLine = 0;
             // big check to see if the filePath already exists in the index
             while (line != null) {
                 // isolates the filePath and blob name from the read line
-                String indexFilePath = line.substring(newHash.length());
-                String indexBlobName = line.substring(0, 41);
+                String indexFilePath = line.substring(newHash.length() + 1);
+                String indexBlobName = line.substring(0, 40);
                 // checks and appends the blob name if the file name is the same, but the hash
                 // is different
                 if (indexFilePath.equals(filePath.toString())) {
                     if (!hashFile(Files.readAllBytes(filePath)).equals(indexBlobName)) {
-                        // lineOffset in necessary, or else it will just contine editing the first line
-                        appender.append(newHash, lineOffset, lineOffset + newHash.length() + 1);
-                        lineReader.close();
-                        appender.close();
+                        List<String> fileContent = new ArrayList<>(Files.readAllLines(index.toPath(), StandardCharsets.UTF_8));
+                        fileContent.set(fileLine, newHash + " " + indexFilePath);
+
+                        try (BufferedWriter bw = new BufferedWriter(new FileWriter(index))) {
+                            bw.write(fileContent.get(0));
+                            for (int i = 1; i < fileContent.size(); i++) {
+                                bw.write("\n");
+                                bw.write(fileContent.get(i));
+                            }
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                         return true;
                     }
                 }
-                lineOffset += line.length();
+                fileLine += 1;
                 line = lineReader.readLine();
             }
             // For blob-making conveinence, may delete later
@@ -307,6 +316,11 @@ public class Git {
             String contentHash = hashFile(contents.getBytes());
             File output = new File(objects + "/" + contentHash);
             Files.write(output.toPath(), contents.getBytes());
+
+            // Creates root tree file
+            String rootTreeContent = "tree " + contentHash + " (root)";
+            String rootTreeHash = hashFile(rootTreeContent.getBytes());
+            Files.write(Path.of("git/objects/" + rootTreeHash), rootTreeContent.getBytes());
             return contentHash;
         } catch (IOException e) {
             e.printStackTrace();
@@ -360,7 +374,7 @@ public class Git {
         return treeHash;
     }
 
-    public void commit(String author, String message) throws IOException {
+    public String commit(String author, String message) throws IOException {
         String currentHash = initIndexTree();
         if (currentHash.length() == 0) {
             throw new IOException("Failed to initialize tree from index");
@@ -419,5 +433,6 @@ public class Git {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return commitHash;
     }
 }
